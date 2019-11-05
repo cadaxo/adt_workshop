@@ -36,6 +36,8 @@ CLASS zcl_cdx_adt_ws_ex05a_00 IMPLEMENTATION.
 * >>> adjust_ordernumber
     LOOP AT it_table ASSIGNING FIELD-SYMBOL(<new_order>).
       <new_order>-order_nr = <new_order>-order_nr + sy-datum+0(4).
+      <new_order>-total_price = 500 * sy-tabix * sy-tabix.
+      <new_order>-currency = 'EUR'.
     ENDLOOP.
 * <<< adjust_ordernumber
 
