@@ -37,7 +37,12 @@ CLASS lcl_worker IMPLEMENTATION.
 
     LOOP AT orders ASSIGNING <new_order> FROM 1 TO lines( orders ).
       APPEND <new_order> TO orders ASSIGNING FIELD-SYMBOL(<new_order_2>).
-      <new_order_2>-order_nr = <new_order_2>-order_nr + 5000.
+      <new_order_2>-order_nr  = <new_order_2>-order_nr + 5000.
+      IF <new_order_2>-total_price < 4000.
+        <new_order_2>-total_price = <new_order_2>-total_price + 30.
+      ELSE.
+        <new_order_2>-total_price = <new_order_2>-total_price * '2.5'.
+      ENDIF.
     ENDLOOP.
 
     APPEND <new_order> TO orders ASSIGNING <new_order_2>.
