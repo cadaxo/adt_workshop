@@ -30,12 +30,22 @@ CLASS lcl_worker IMPLEMENTATION.
            UP TO 10 ROWS.
     LOOP AT orders ASSIGNING FIELD-SYMBOL(<new_order>).
       <new_order>-order_nr    = <new_order>-order_nr + sy-datum+0(4).
-      <new_order>-total_price = 500 * sy-tabix * sy-tabix.
+      <new_order>-order_date  = <new_order>-order_date - sy-tabix.
+      <new_order>-total_price = 500 * sy-tabix + sy-tabix.
       <new_order>-currency    = 'EUR'.
     ENDLOOP.
-*<order>-total_price / 500
+
+    LOOP AT orders ASSIGNING <new_order> FROM 1 TO lines( orders ).
+      APPEND <new_order> TO orders ASSIGNING FIELD-SYMBOL(<new_order_2>).
+      <new_order_2>-order_nr = <new_order_2>-order_nr + 5000.
+    ENDLOOP.
+
+    APPEND <new_order> TO orders ASSIGNING <new_order_2>.
+    <new_order_2>-order_nr = <new_order_2>-order_nr + 6000.
+    CLEAR <new_order_2>-order_date.
+
     DATA(items) = VALUE ty_items( FOR <order> IN orders
-                                    FOR i = 0 UNTIL i = <order>-total_price / 500
+                                    FOR i = 0 UNTIL i >= <order>-total_price / 500
                                       ( order_nr      = <order>-order_nr
                                         order_posnr   = i + 1
                                         product_id    = i + 200
