@@ -29,7 +29,7 @@ CLASS lcl_worker IMPLEMENTATION.
            INTO CORRESPONDING FIELDS of TABLE @orders
            UP TO 10 ROWS.
     LOOP AT orders ASSIGNING FIELD-SYMBOL(<new_order>).
-      <new_order>-order_nr    = <new_order>-order_nr + sy-datum+0(4).
+      <new_order>-order_nr    = |{ CONV zcdx_order_nr_00( <new_order>-order_nr + sy-datum+0(4) ) ALPHA = IN }|.
       <new_order>-order_date  = <new_order>-order_date - sy-tabix.
       <new_order>-total_price = 500 * sy-tabix + sy-tabix.
       <new_order>-currency    = 'EUR'.
@@ -37,7 +37,7 @@ CLASS lcl_worker IMPLEMENTATION.
 
     LOOP AT orders ASSIGNING <new_order> FROM 1 TO lines( orders ).
       APPEND <new_order> TO orders ASSIGNING FIELD-SYMBOL(<new_order_2>).
-      <new_order_2>-order_nr  = <new_order_2>-order_nr + 5000.
+      <new_order_2>-order_nr  = |{ CONV zcdx_order_nr_00( <new_order_2>-order_nr + 5000 ) ALPHA = IN }|.
       IF <new_order_2>-total_price < 4000.
         <new_order_2>-total_price = <new_order_2>-total_price + 30.
       ELSE.
@@ -45,14 +45,15 @@ CLASS lcl_worker IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+* Error Date eg SQL Expressions or OData null
     APPEND <new_order> TO orders ASSIGNING <new_order_2>.
-    <new_order_2>-order_nr = <new_order_2>-order_nr + 6000.
+    <new_order_2>-order_nr = |{ CONV zcdx_order_nr_00( <new_order_2>-order_nr + 6000 ) ALPHA = IN }|.
     CLEAR <new_order_2>-order_date.
 
     DATA(items) = VALUE ty_items( FOR <order> IN orders
                                     FOR i = 0 UNTIL i >= <order>-total_price / 500
                                       ( order_nr      = <order>-order_nr
-                                        order_posnr   = i + 1
+                                        order_posnr   = condense( conv zcdx_order_posnr_00( i + 1 ) )
                                         product_id    = i + 200
                                         quantity      = 1
                                         quantity_unit = 'STK'

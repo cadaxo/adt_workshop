@@ -19,7 +19,11 @@ CLASS zcl_cdx_adt_ws_ex05_00 IMPLEMENTATION.
   METHOD main.
     TYPES: ty_orders TYPE STANDARD TABLE OF zcdx_order_00 WITH DEFAULT KEY.
 
-    DATA(lt_table) = VALUE ty_orders( ).
+    data lt_table2 type standard table of but000.
+
+    DATA(lt_table) = VALUE ty_orders( ( currency = lt_table2[ partner = '123' ]-name_org1 )
+                                      (  currency = 'USD' )
+                                    ).
 
 * >>> determin_new_orders
     SELECT partner AS order_nr,
