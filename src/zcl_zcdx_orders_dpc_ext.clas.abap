@@ -10,6 +10,10 @@ CLASS zcl_zcdx_orders_dpc_ext DEFINITION
     METHODS eitemsset_delete_entity REDEFINITION.
     METHODS eordersset_delete_entity REDEFINITION.
   PRIVATE SECTION.
+    METHODS generic_filter IMPORTING iv_entity_name           TYPE string
+                                     it_filter_select_options TYPE /iwbep/t_mgw_select_option
+                           CHANGING  ct_entityset             TYPE standard table
+                           RAISING   /iwbep/cx_mgw_tech_exception.
 ENDCLASS.
 
 
@@ -73,6 +77,8 @@ CLASS zcl_zcdx_orders_dpc_ext IMPLEMENTATION.
 
     ENDIF.
 
+* Works fine if abap fieldname == entity fieldname
+* otherwise see me->generic_filter
     /iwbep/cl_mgw_data_util=>filtering( EXPORTING it_select_options = it_filter_select_options
                                         CHANGING  ct_data           = et_entityset ).
 
@@ -89,7 +95,6 @@ CLASS zcl_zcdx_orders_dpc_ext IMPLEMENTATION.
 
     DATA eordersset_get_entity TYPE zcl_zcdx_orders_mpc=>ts_orders.
     DATA eitemsset_get_entity TYPE zcl_zcdx_orders_mpc=>ts_items.
-* data(lv_source_entity_set_name) = io_tech_request_context->get_source_entity_set_name( ).
 
     DATA(lv_source_entity_set_name) = io_tech_request_context->get_entity_set_name( ).
 * io_tech_request_context->get_converted_source_keys( IMPORTING es_key_values = data(ls_converted_source_keys) ).
@@ -157,41 +162,53 @@ CLASS zcl_zcdx_orders_dpc_ext IMPLEMENTATION.
 
 
     IF io_tech_request_context->has_inlinecount( ) = abap_true.
+
       es_response_context-inlinecount = lines( et_entityset ).
+
     ENDIF.
 
-    IF it_order[] IS NOT INITIAL.
+    IF it_order IS NOT INITIAL.
 
       /iwbep/cl_mgw_data_util=>orderby( EXPORTING it_order = CORRESPONDING #( io_tech_request_context->get_orderby( ) )
                                         CHANGING  ct_data  = et_entityset ).
 
     ENDIF.
 
-
     IF it_filter_select_options IS NOT INITIAL.
-      DATA: facade TYPE REF TO /iwbep/cl_mgw_dp_facade.
-      facade ?= /iwbep/if_mgw_conv_srv_runtime~get_dp_facade( ).
 
-      DATA(entity_type) = facade->/iwbep/if_mgw_dp_int_facade~get_model( )->get_entity_type( CONV #( iv_entity_name ) ).
-      DATA(properties) = entity_type->get_properties( ).
+      me->generic_filter( EXPORTING iv_entity_name           = iv_entity_name
+                                    it_filter_select_options = it_filter_select_options
+                          CHANGING  ct_entityset             = et_entityset ).
 
-      DATA(lt_filter_select_options) = it_filter_select_options.
-      LOOP AT lt_filter_select_options ASSIGNING FIELD-SYMBOL(<filter_select_option>).
-        <filter_select_option>-property = to_upper( <filter_select_option>-property ).
-        IF NOT line_exists( properties[ technical_name = <filter_select_option>-property ] ).
-          LOOP AT properties ASSIGNING FIELD-SYMBOL(<property>).
-            IF to_upper( <property>-property->get_name( ) ) = <filter_select_option>-property.
-              <filter_select_option>-property = to_upper( <property>-property->get_name( ) ).
-              EXIT. " LOOP.
-            ENDIF.
-          ENDLOOP.
-        ENDIF.
-      ENDLOOP.
+    ENDIF.
 
-      /iwbep/cl_mgw_data_util=>filtering( EXPORTING it_select_options = lt_filter_select_options
-                                          CHANGING  ct_data           = et_entityset ).
+  ENDMETHOD.
 
-      LOOP AT it_filter_select_options ASSIGNING  <filter_select_option>.
+  METHOD generic_filter.
+
+    DATA: facade TYPE REF TO /iwbep/cl_mgw_dp_facade.
+    facade ?= /iwbep/if_mgw_conv_srv_runtime~get_dp_facade( ).
+
+    DATA(entity_type) = facade->/iwbep/if_mgw_dp_int_facade~get_model( )->get_entity_type( CONV #( iv_entity_name ) ).
+    DATA(properties) = entity_type->get_properties( ).
+
+    DATA(lt_filter_select_options) = it_filter_select_options.
+    LOOP AT lt_filter_select_options ASSIGNING FIELD-SYMBOL(<filter_select_option>).
+      <filter_select_option>-property = to_upper( <filter_select_option>-property ).
+      IF NOT line_exists( properties[ technical_name = <filter_select_option>-property ] ).
+        LOOP AT properties ASSIGNING FIELD-SYMBOL(<property>).
+          IF to_upper( <property>-property->get_name( ) ) = <filter_select_option>-property.
+            <filter_select_option>-property = to_upper( <property>-property->get_abap_name( ) ).
+            EXIT. " LOOP.
+          ENDIF.
+        ENDLOOP.
+      ENDIF.
+    ENDLOOP.
+
+    /iwbep/cl_mgw_data_util=>filtering( EXPORTING it_select_options = lt_filter_select_options
+                                        CHANGING  ct_data           = ct_entityset ).
+
+    LOOP AT it_filter_select_options ASSIGNING  <filter_select_option>.
 *        IF <filter_select_option>-property = 'OrderNr'.
 *          DELETE et_entityset WHERE order_nr NOT IN <filter_select_option>-select_options.
 *        ENDIF.
@@ -209,8 +226,9 @@ CLASS zcl_zcdx_orders_dpc_ext IMPLEMENTATION.
 *        ENDIF.
 
 
-      ENDLOOP.
-    ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
+
+
 ENDCLASS.
