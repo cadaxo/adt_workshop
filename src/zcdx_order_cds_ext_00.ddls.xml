@@ -7,6 +7,7 @@
     <DDLANGUAGE>E</DDLANGUAGE>
     <PARENTNAME>ZCDX_ORDER_CDS_00</PARENTNAME>
     <DDTEXT>Extension</DDTEXT>
+    <SOURCE_TYPE>E</SOURCE_TYPE>
    </DDLS>
   </asx:values>
  </asx:abap>

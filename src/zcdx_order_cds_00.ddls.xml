@@ -6,6 +6,7 @@
     <DDLNAME>ZCDX_ORDER_CDS_00</DDLNAME>
     <DDLANGUAGE>E</DDLANGUAGE>
     <DDTEXT>Orders</DDTEXT>
+    <SOURCE_TYPE>V</SOURCE_TYPE>
    </DDLS>
   </asx:values>
  </asx:abap>

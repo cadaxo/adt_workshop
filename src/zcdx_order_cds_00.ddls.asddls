@@ -11,4 +11,5 @@ association [1..*] to zcdx_item_00 as _items on _items.order_nr = $projection.or
    currency, 
    total_price,
     _items
-}
+} 
+ 
